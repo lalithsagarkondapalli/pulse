@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}{{ survey.brand }} · Quick question{% endblock %}
+{% block header %}{% endblock %}
+{% block main_class %}narrow{% endblock %}
+{% block content %}
+<form method="post" class="card stack" id="survey">
+  <p class="eyebrow">{{ survey.brand }}</p>
+  <h1>{{ survey.question }}</h1>
+
+  <fieldset class="scale" aria-label="Score from 0 to 10">
+    {% for i in range(11) %}
+    <label><input type="radio" name="score" value="{{ i }}" required><span>{{ i }}</span></label>
+    {% endfor %}
+  </fieldset>
+  <div class="scale-legend muted"><span>Not likely</span><span>Very likely</span></div>
+
+  <label>What's the main reason for your score?
+    <textarea name="comment" rows="4" maxlength="2000" placeholder="Optional, but it helps us most"></textarea>
+  </label>
+
+  {% if survey.reward_points > 0 %}
+  <label>Email for your {{ survey.reward_points }} reward points
+    <input type="email" name="email" maxlength="254" autocomplete="email" placeholder="Optional">
+  </label>
+  <label class="check"><input type="checkbox" name="contact_ok" value="true">
+    It's OK for the team to email me about my feedback</label>
+  {% endif %}
+
+  <!-- honeypot -->
+  <input type="text" name="website" tabindex="-1" autocomplete="off" class="hp" aria-hidden="true">
+
+  <button type="submit">Send feedback</button>
+  <p class="fine muted">We store your email only as a one-way hash for rewards, unless you tick the box above.</p>
+</form>
+{% endblock %}

@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}Thank you{% endblock %}
+{% block header %}{% endblock %}
+{% block main_class %}narrow{% endblock %}
+{% block content %}
+<section class="card stack center">
+  <p class="eyebrow">{{ survey.brand }}</p>
+  <h1>Thanks — we read every response.</h1>
+  {% if code %}
+  <p>Your {{ survey.reward_points }} points are ready. Use this code at checkout:</p>
+  <p class="code">{{ code }}</p>
+  {% elif score is defined and score is not none and survey.reward_points > 0 %}
+  <p class="muted">Add your email next time to collect reward points.</p>
+  {% endif %}
+</section>
+{% endblock %}

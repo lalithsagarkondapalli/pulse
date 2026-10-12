@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="card">
+  <h1>Surveys</h1>
+  {% if surveys %}
+  <table>
+    <thead><tr><th>Brand</th><th>Question</th><th class="num">Responses</th><th></th></tr></thead>
+    <tbody>
+    {% for s in surveys %}
+      <tr>
+        <td>{{ s.brand }}</td><td>{{ s.question }}</td><td class="num">{{ s.n }}</td>
+        <td><a href="/dashboard/{{ s.slug }}">Dashboard</a> · <a href="/s/{{ s.slug }}">Public link</a></td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p class="muted">No surveys yet. Create one below, or run <code>python -m scripts.seed</code> for demo data.</p>
+  {% endif %}
+</section>
+
+<section class="card">
+  <h2>New survey</h2>
+  <form method="post" action="/surveys" class="stack">
+    <label>Brand <input name="brand" required maxlength="80" placeholder="Acme Outdoor"></label>
+    <label>Question <input name="question" required maxlength="200"
+      value="How likely are you to recommend us to a friend?"></label>
+    <label>Reward points for responding <input name="reward_points" type="number" min="0" max="10000" value="50"></label>
+    <button type="submit">Create survey</button>
+  </form>
+</section>
+{% endblock %}

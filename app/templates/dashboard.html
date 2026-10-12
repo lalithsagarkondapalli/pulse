@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+{% block title %}{{ survey.brand }} · Pulse{% endblock %}
+{% block content %}
+<div class="head-row">
+  <div>
+    <p class="eyebrow">{{ survey.brand }}</p>
+    <h1>{{ survey.question }}</h1>
+  </div>
+  <a class="btn ghost" href="/s/{{ survey.slug }}" target="_blank">Open public survey ↗</a>
+</div>
+
+{% set o = s.overall %}
+<section class="kpis">
+  <div class="kpi"><span class="label">NPS</span>
+    <span class="value">{{ o.nps if o.nps is not none else "—" }}</span>
+    {% if o.n %}<span class="sub">95% CI {{ o.ci_low }} to {{ o.ci_high }}</span>{% endif %}</div>
+  <div class="kpi"><span class="label">Responses</span><span class="value">{{ o.n }}</span></div>
+  <div class="kpi"><span class="label">Rewards issued</span><span class="value">{{ s.rewards_issued }}</span></div>
+  <div class="kpi"><span class="label">Awaiting follow-up</span><span class="value">{{ s.follow_up|length }}</span></div>
+</section>
+
+{% if o.n and o.n < 30 %}
+<p class="note">Fewer than 30 responses: treat the score as directional — the interval is wide.</p>
+{% endif %}
+
+<section class="card">
+  <h2>NPS by week</h2>
+  {% if s.weekly %}
+  {% set w = 640 %}{% set h = 180 %}{% set n = s.weekly|length %}{% set bw = (w - 40) / n %}
+  <svg viewBox="0 0 {{ w }} {{ h + 24 }}" class="chart" role="img" aria-label="Weekly NPS">
+    <line x1="30" x2="{{ w }}" y1="{{ h/2 }}" y2="{{ h/2 }}" class="axis"/>
+    <text x="0" y="12" class="tick">+100</text><text x="12" y="{{ h/2 + 4 }}" class="tick">0</text>
+    <text x="0" y="{{ h }}" class="tick">−100</text>
+    {% for wk in s.weekly %}
+      {% set v = wk.nps %}{% set bh = (v|abs) / 100 * (h/2) %}
+      <rect x="{{ 34 + loop.index0 * bw + 2 }}" width="{{ [bw - 6, 2]|max }}"
+            y="{{ h/2 - bh if v >= 0 else h/2 }}" height="{{ [bh, 1]|max }}"
+            class="{{ 'pos' if v >= 0 else 'neg' }}{{ ' low' if wk.n < 20 }}"><title>{{ wk.week }}: NPS {{ v }} (n={{ wk.n }}{{ ', too few to read' if wk.n < 20 }})</title></rect>
+      {% if n <= 12 %}<text x="{{ 34 + loop.index0 * bw + bw/2 }}" y="{{ h + 18 }}" class="tick" text-anchor="middle">{{ wk.week[-3:] }}</text>{% endif %}
+    {% endfor %}
+  </svg>
+  <p class="muted small">Faded bars have fewer than 20 responses — don't read a trend into them.</p>
+  {% else %}<p class="muted">No responses yet.</p>{% endif %}
+</section>
+
+<section class="card">
+  <h2>What's driving detractors</h2>
+  <p class="muted">Themes ranked by how many detractors (0–6) they account for — fix from the top.
+    {% if s.pending_tags %}<br>{{ s.pending_tags }} response(s) still being tagged.
+    <form method="post" action="/dashboard/{{ survey.slug }}/retag" class="inline"><button class="link">Retry tagging</button></form>{% endif %}</p>
+  {% if s.themes %}
+  <table>
+    <thead><tr><th>Theme</th><th class="num">Responses</th><th class="num">NPS</th><th>Share of detractors</th></tr></thead>
+    <tbody>
+    {% for t in s.themes %}
+      <tr><td>{{ t.theme.replace('_', ' ') }}</td><td class="num">{{ t.n }}</td><td class="num">{{ t.nps }}</td>
+        <td><div class="bar"><span style="width: {{ t.detractor_share }}%"></span></div> {{ t.detractor_share }}%</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% endif %}
+</section>
+
+<section class="card" id="follow-up">
+  <h2>Close the loop</h2>
+  <p class="muted">Detractors who agreed to be contacted. Reply within 48 hours, then mark done.</p>
+  {% for r in s.follow_up %}
+  <div class="resp">
+    <span class="score det">{{ r.score }}</span>
+    <div class="grow"><p>{{ r.comment or "(no comment)" }}</p>
+      <p class="muted small">{{ r.contact_email }} · {{ (r.theme or "untagged").replace('_', ' ') }} · {{ r.created_at }}</p></div>
+    <form method="post" action="/responses/{{ r.id }}/follow-up"><button class="ghost">Mark done</button></form>
+  </div>
+  {% else %}<p class="muted">Nothing waiting. 🎉</p>{% endfor %}
+</section>
+
+<section class="card">
+  <h2>Latest responses</h2>
+  {% for r in s.recent %}
+  <div class="resp">
+    <span class="score {{ 'pro' if r.score >= 9 else 'pas' if r.score >= 7 else 'det' }}">{{ r.score }}</span>
+    <div class="grow"><p>{{ r.comment or "(no comment)" }}</p>
+      <p class="muted small">{{ (r.theme or "tagging…").replace('_', ' ') }}{% if r.sentiment %} · {{ r.sentiment }}{% endif %}{% if r.tagged_by %} · by {{ r.tagged_by }}{% endif %}</p></div>
+  </div>
+  {% endfor %}
+</section>
+{% endblock %}

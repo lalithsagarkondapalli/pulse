@@ -1,0 +1,15 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Pulse{% endblock %}</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  {% block header %}
+  <header class="top"><a href="/" class="logo">Pulse</a><span class="muted">feedback → insight → reward</span></header>
+  {% endblock %}
+  <main class="{% block main_class %}wrap{% endblock %}">{% block content %}{% endblock %}</main>
+</body>
+</html>
